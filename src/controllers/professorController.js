@@ -1,4 +1,4 @@
-const Professor = require('../models/professor');
+const Professor = require('../models/Professor');
 
 class ProfessorController {
     async create(req, res) {
