@@ -1,11 +1,9 @@
 const Usuario = require('./Usuario');
-const knex = require('../database/connection');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 class Admin extends Usuario {
-    constructor(nome, email, password) {
-        super(nome, email, password, 'admin');
+    constructor(nome, email, password, phoneNumber) {
+        super(nome, email, password, 'admin', phoneNumber);
     }
 
     async login(email, password) {
@@ -22,8 +20,8 @@ class Admin extends Usuario {
             return { status: false, message: 'Senha incorreta' };
         }
 
-        const token = jwt.sign({ id: admin.idUsuario, role: admin.role }, 'secret_key', { expiresIn: '1h' });
-        return { status: true, token };
+        // Retorna o usuário para obter o ID e o phoneNumber
+        return { status: true, user: admin };
     }
 }
 
