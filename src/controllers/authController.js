@@ -15,14 +15,14 @@ class AuthController {
         if (result.status) {
             const user = result.user;
 
-            // Gere um código de verificação de 4 dígitos
+    
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
             // Armazene o código no banco de dados
             await knex('verification_codes').insert({
                 user_id: user.id,
                 code: verificationCode,
-                expires_at: new Date(Date.now() + 10 * 60000), // Expira em 10 minutos
+                expires_at: new Date(Date.now() + 10 * 60000), 
             });
 
             // Envie o código via SMS
