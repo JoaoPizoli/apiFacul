@@ -7,9 +7,8 @@ const cors = require('cors');
 const app = express();
 
 app.use(cors({
-  origin: '*',
+    origin: 'https://front-end-projeto-bf.vercel.app',
 }));
-
 
 app.use(express.json());
 app.use(router);
