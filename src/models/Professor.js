@@ -13,8 +13,8 @@ class Professor extends Usuario {
 
         try {
             await knex.insert({
-                email: this.email,
-                areaAtuacao: this.areaAtuacao
+                areaAtuacao: this.areaAtuacao,
+                email: this.email
             }).table('professores');
             return { status: true };
         } catch (err) {

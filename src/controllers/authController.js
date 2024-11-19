@@ -18,14 +18,14 @@ class AuthController {
     
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
-           
+    
             await knex('verification_codes').insert({
                 user_id: user.id,
                 code: verificationCode,
                 expires_at: new Date(Date.now() + 10 * 60000), 
             });
 
-            
+  
             try {
                 await client.messages.create({
                     body: `Seu código de verificação é: ${verificationCode}`,
@@ -47,7 +47,7 @@ class AuthController {
     async verifyCode(req, res) {
         const { email, code } = req.body;
 
-        
+        // Obtenha o usuário
         const userResult = await knex('usuarios').where({ email }).first();
         if (!userResult) {
             return res.status(400).json({ message: 'Usuário não encontrado.' });
