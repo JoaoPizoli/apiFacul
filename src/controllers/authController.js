@@ -18,14 +18,14 @@ class AuthController {
     
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
-            // Armazene o código no banco de dados
+           
             await knex('verification_codes').insert({
                 user_id: user.id,
                 code: verificationCode,
                 expires_at: new Date(Date.now() + 10 * 60000), 
             });
 
-            // Envie o código via SMS
+            
             try {
                 await client.messages.create({
                     body: `Seu código de verificação é: ${verificationCode}`,
@@ -43,17 +43,17 @@ class AuthController {
         }
     }
 
-    // Método para verificar o código
+    
     async verifyCode(req, res) {
         const { email, code } = req.body;
 
-        // Obtenha o usuário
+        
         const userResult = await knex('usuarios').where({ email }).first();
         if (!userResult) {
             return res.status(400).json({ message: 'Usuário não encontrado.' });
         }
 
-        // Verifique se o código é válido
+        
         const record = await knex('verification_codes')
             .where({ user_id: userResult.id, code })
             .andWhere('expires_at', '>', new Date())
@@ -63,10 +63,10 @@ class AuthController {
             return res.status(400).json({ message: 'Código de verificação inválido ou expirado.' });
         }
 
-        // Gere o token JWT
+        
         const token = jwt.sign({ id: userResult.id, role: userResult.role }, 'secret_key', { expiresIn: '1h' });
 
-        // Exclua o código de verificação após o uso
+        
         await knex('verification_codes').where({ id: record.id }).del();
 
         return res.status(200).json({ token });
