@@ -5,12 +5,12 @@ const twilio = require('twilio');
 const jwt = require('jsonwebtoken');
 const knex = require('../database/connection');
 
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const client = twilio(AC26cf7ef55783bfe552f453e751ec6a5c, '84e9788fe1987ec62f1ae97178ffe7e8');
 
 class AuthController {
     async create(req, res) {
         const { email, password } = req.body;
-        const admin = new Admin(); // Instanciado sem parâmetros
+        const admin = new Admin(); 
 
         const result = await admin.login(email, password);
         if (result.status) {
