@@ -16,10 +16,10 @@ class Aluno extends Usuario {
 
         try {
             await knex('alunos').insert({
+                email: this.email,
                 instrumento: this.instrumento,
                 matricula: this.matricula,
                 dataNascimento: this.dataNascimento,
-                email: this.email
             });
             return { status: true };
         } catch (err) {
