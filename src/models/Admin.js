@@ -2,8 +2,8 @@ const Usuario = require('./Usuario');
 const bcrypt = require('bcryptjs');
 
 class Admin extends Usuario {
-    constructor(nome, email, password, phoneNumber) {
-        super(nome, email, password, 'admin', phoneNumber);
+    constructor(nome, email,phoneNumber, password) {
+        super(nome, email, phoneNumber, password, 'admin', );
     }
 
     async login(email, password) {
@@ -20,7 +20,6 @@ class Admin extends Usuario {
             return { status: false, message: 'Senha incorreta' };
         }
 
-        // Retorna o usuário para obter o ID e o phoneNumber
         return { status: true, user: admin };
     }
 }

@@ -2,12 +2,13 @@ const knex = require('../database/connection');
 const bcrypt = require('bcryptjs');
 
 class Usuario {
-    constructor(nome, email, password, role, phoneNumber) {
+    constructor(nome, email, phoneNumber,password, role) {
         this.nome = nome;
         this.email = email;
+        this.phoneNumber = phoneNumber;
         this.password = password;
         this.role = role;
-        this.phoneNumber = phoneNumber;
+        
     }
 
     async createUser() {
@@ -18,9 +19,11 @@ class Usuario {
             await knex('usuarios').insert({
                 nome: this.nome,
                 email: this.email,
-                role: this.role,
-                password: hashedPassword,
                 phoneNumber: this.phoneNumber,
+                password: hashedPassword,
+                role: this.role
+                
+                
             });
             return { status: true };
         } catch (err) {
