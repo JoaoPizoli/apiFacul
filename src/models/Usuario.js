@@ -34,8 +34,8 @@ class Usuario {
     async findUserByEmail(email) {
         try {
             const user = await knex('usuarios')
-                .select(['id', 'email', 'password', 'role', 'phoneNumber'])
-                .where({ email });
+                .select(['id', 'email','phoneNumber','password', 'role'])
+                .where({ email : email});
             return user.length > 0
                 ? { status: true, user: user[0] }
                 : { status: false, message: 'Usuário não encontrado' };
