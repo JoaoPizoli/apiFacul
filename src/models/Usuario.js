@@ -7,37 +7,53 @@ class Usuario {
         this.nome = nome;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.password = password;
+        this.password = password; // Pode ser undefined para Alunos
         this.role = role;
     }
 
     async createUser() {
-        let salt = bcrypt.genSaltSync(10);
-        let hashedPassword = bcrypt.hashSync(this.password, salt);
-
         try {
+            console.log(`Criando usuário: ${this.email}`);
+
+            if (this.password) {
+                console.log(`Senha recebida: ${this.password}`);
+                const salt = bcrypt.genSaltSync(10);
+                const hashedPassword = bcrypt.hashSync(this.password, salt);
+                this.password = hashedPassword;
+            } else {
+                this.password = null; // Ou você pode optar por uma string vazia ''
+            }
+
             await knex('usuarios').insert({
                 nome: this.nome,
                 email: this.email,
                 phoneNumber: this.phoneNumber,
-                password: hashedPassword,
+                password: this.password, // Hash da senha ou null
                 role: this.role
             });
+
+            console.log(`Usuário ${this.email} criado com sucesso.`);
             return { status: true };
         } catch (err) {
+            console.error(`Erro ao criar usuário: ${err.message}`);
             return { status: false, err: err.message };
         }
     }
 
     async findUserByEmail(email) {
         try {
+            console.log(`Procurando usuário pelo email: ${email}`);
             const user = await knex('usuarios')
-                .select(['id', 'email','phoneNumber','password', 'role'])
-                .where({ email : email});
+                .select(['id', 'email', 'phoneNumber', 'password', 'role'])
+                .where({ email: email });
+
+            console.log(`Usuário encontrado: ${JSON.stringify(user)}`);
+
             return user.length > 0
                 ? { status: true, user: user[0] }
                 : { status: false, message: 'Usuário não encontrado' };
         } catch (err) {
+            console.error(`Erro ao buscar usuário: ${err.message}`);
             return { status: false, err: err.message };
         }
     }
