@@ -1,4 +1,3 @@
-// middlewares/authAdmin.js
 const jwt = require('jsonwebtoken');
 
 function authAdmin(req, res, next) {
