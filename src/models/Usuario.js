@@ -1,14 +1,14 @@
+// src/models/Usuario.js
 const knex = require('../database/connection');
 const bcrypt = require('bcryptjs');
 
 class Usuario {
-    constructor(nome, email, phoneNumber,password, role) {
+    constructor(nome, email, phoneNumber, password, role) {
         this.nome = nome;
         this.email = email;
         this.phoneNumber = phoneNumber;
         this.password = password;
         this.role = role;
-        
     }
 
     async createUser() {
@@ -22,8 +22,6 @@ class Usuario {
                 phoneNumber: this.phoneNumber,
                 password: hashedPassword,
                 role: this.role
-                
-                
             });
             return { status: true };
         } catch (err) {

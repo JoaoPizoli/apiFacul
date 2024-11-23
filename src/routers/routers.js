@@ -1,4 +1,4 @@
-// routers/routers.js
+// src/routers/routers.js
 const express = require('express');
 const AuthController = require('../controllers/authController');
 const AlunoController = require('../controllers/alunoController');
@@ -7,13 +7,8 @@ const authAdmin = require('../middlewares/authAdmin');
 
 const router = express.Router();
 
-
 router.post('/admin/login', AuthController.create);
-
-
 router.post('/admin/verify-code', AuthController.verifyCode);
-
-
 router.post('/alunos', authAdmin, AlunoController.create);
 router.post('/professores', authAdmin, ProfessorController.create);
 

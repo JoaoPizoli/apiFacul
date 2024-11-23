@@ -1,4 +1,5 @@
-require('dotenv').config()
+// src/controllers/authController.js
+require('dotenv').config();
 const Admin = require('../models/Admin');
 const twilio = require('twilio');
 const jwt = require('jsonwebtoken');
@@ -9,23 +10,20 @@ const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TO
 class AuthController {
     async create(req, res) {
         const { email, password } = req.body;
-        const admin = new Admin();
+        const admin = new Admin(); // Instanciado sem parâmetros
 
         const result = await admin.login(email, password);
         if (result.status) {
             const user = result.user;
 
-    
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
-    
             await knex('verification_codes').insert({
                 user_id: user.id,
                 code: verificationCode,
                 expires_at: new Date(Date.now() + 10 * 60000), 
             });
 
-  
             try {
                 await client.messages.create({
                     body: `Seu código de verificação é: ${verificationCode}`,
@@ -43,7 +41,6 @@ class AuthController {
         }
     }
 
-    
     async verifyCode(req, res) {
         const { email, code } = req.body;
 
@@ -53,7 +50,6 @@ class AuthController {
             return res.status(400).json({ message: 'Usuário não encontrado.' });
         }
 
-        
         const record = await knex('verification_codes')
             .where({ user_id: userResult.id, code })
             .andWhere('expires_at', '>', new Date())
@@ -63,10 +59,8 @@ class AuthController {
             return res.status(400).json({ message: 'Código de verificação inválido ou expirado.' });
         }
 
-        
         const token = jwt.sign({ id: userResult.id, role: userResult.role }, 'secret_key', { expiresIn: '1h' });
 
-        
         await knex('verification_codes').where({ id: record.id }).del();
 
         return res.status(200).json({ token });

@@ -1,9 +1,10 @@
+// src/models/Professor.js
 const Usuario = require('./Usuario');
 const knex = require('../database/connection');
 
 class Professor extends Usuario {
-    constructor(nome, email, password, areaAtuacao) {
-        super(nome, email, password, 'professor');
+    constructor(nome, email, phoneNumber, password, areaAtuacao) {
+        super(nome, email, phoneNumber, password, 'professor');
         this.areaAtuacao = areaAtuacao;
     }
 
@@ -12,10 +13,10 @@ class Professor extends Usuario {
         if (!userResult.status) return userResult;
 
         try {
-            await knex.insert({
+            await knex('professores').insert({
                 areaAtuacao: this.areaAtuacao,
                 email: this.email
-            }).table('professores');
+            });
             return { status: true };
         } catch (err) {
             return { status: false, err: err.message };

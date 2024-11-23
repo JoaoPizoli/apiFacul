@@ -1,9 +1,10 @@
+// src/models/Admin.js
 const Usuario = require('./Usuario');
 const bcrypt = require('bcryptjs');
 
 class Admin extends Usuario {
-    constructor(nome, email,phoneNumber, password) {
-        super(nome, email, phoneNumber, password, 'admin', );
+    constructor(nome = '', email = '', phoneNumber = '', password = '') {
+        super(nome, email, phoneNumber, password, 'admin');
     }
 
     async login(email, password) {
