@@ -8,15 +8,22 @@ class Admin extends Usuario {
     }
 
     async login(email, password) {
+        console.log(`Tentando fazer login para o email: ${email}`);
         const userResult = await this.findUserByEmail(email);
+        console.log('Resultado da busca do usuário:', userResult);
+
         if (!userResult.status) return userResult;
         const admin = userResult.user;
+
+        console.log(`Papel do usuário encontrado: ${admin.role}`);
 
         if (admin.role !== 'admin') {
             return { status: false, message: 'Acesso negado. Não é admin.' };
         }
 
         const isMatch = bcrypt.compareSync(password, admin.password);
+        console.log(`Senha corresponde: ${isMatch}`);
+
         if (!isMatch) {
             return { status: false, message: 'Senha incorreta' };
         }
