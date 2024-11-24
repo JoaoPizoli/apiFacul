@@ -10,9 +10,19 @@ class Professor extends Usuario {
     }
 
     async createProfessor() {
-        // Código existente para criar professor
-    }
+        const userResult = await super.createUser();
+        if (!userResult.status) return userResult;
 
+        try {
+            await knex('professores').insert({
+                areaAtuacao: this.areaAtuacao,
+                email: this.email
+            });
+            return { status: true };
+        } catch (err) {
+            return { status: false, err: err.message };
+        }
+    }
     static async getAllProfessores() {
         try {
             const professores = await knex('professores').select('*');

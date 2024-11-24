@@ -7,7 +7,7 @@ class Usuario {
         this.nome = nome;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.password = password; // Pode ser undefined para Alunos
+        this.password = password; 
         this.role = role;
     }
 
