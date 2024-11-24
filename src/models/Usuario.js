@@ -57,6 +57,22 @@ class Usuario {
             return { status: false, err: err.message };
         }
     }
+
+    async findUserByRole(role) {
+        try {
+            const user = await knex('usuarios')
+                .select(['id', 'email', 'phoneNumber', 'password', 'role'])
+                .where({ role : role});
+            return user.length > 0
+                ? { status: true, user: user[0] }
+                : { status: false, message: 'Usuário não encontrado' };
+        } catch (err) {
+            console.error(`Erro ao buscar usuário: ${err.message}`);
+            return { status: false, err: err.message };
+        }
+    }
+
+
 }
 
 module.exports = Usuario;
