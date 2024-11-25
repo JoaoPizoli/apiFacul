@@ -3,31 +3,23 @@ const express = require('express');
 const AuthController = require('../controllers/authController');
 const AlunoController = require('../controllers/alunoController');
 const ProfessorController = require('../controllers/professorController');
-const UsuarioController = require('../controllers/usuarioController');
 const authAdmin = require('../middlewares/authAdmin');
-const authProfessor = require('../middlewares/authProfessor');
-const auth = require('../middlewares/auth'); // Middleware geral
 
 const router = express.Router();
 
 // Rotas de autenticação
-router.post('/admin/login', AuthController.adminLogin);
+router.post('/admin/login', AuthController.create);
 router.post('/admin/verify-code', AuthController.verifyCode);
-router.post('/professor/login', AuthController.professorLogin);
-
-// Rotas para informações do usuário atual
-router.get('/usuarios/me', auth, UsuarioController.getMe);
-router.put('/usuarios/me', auth, UsuarioController.updateMe);
 
 // Rotas de Alunos
-router.post('/alunos', auth, AlunoController.create);
-router.get('/alunos', auth, AlunoController.getAllAlunos);
-router.get('/alunos/instrumento/:instrumento', auth, AlunoController.getAlunosByInstrumento);
-router.get('/alunos/:id', auth, AlunoController.getAlunoById);
-router.put('/alunos/:id', auth, AlunoController.updateAluno);
-router.delete('/alunos/:id', auth, AlunoController.deleteAluno);
+router.post('/alunos', authAdmin, AlunoController.create);
+router.get('/alunos', authAdmin, AlunoController.getAllAlunos);
+router.get('/alunos/instrumento/:instrumento', authAdmin, AlunoController.getAlunosByInstrumento);
+router.get('/alunos/:id', authAdmin, AlunoController.getAlunoById);
+router.put('/alunos/:id', authAdmin, AlunoController.updateAluno);
+router.delete('/alunos/:id', authAdmin, AlunoController.deleteAluno);
 
-// Rotas de Professores (apenas administradores podem gerenciar professores)
+// Rotas de Professores
 router.post('/professores', authAdmin, ProfessorController.create);
 router.get('/professores', authAdmin, ProfessorController.getAllProfessores);
 router.get('/professores/:id', authAdmin, ProfessorController.getProfessorById);

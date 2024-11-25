@@ -25,6 +25,7 @@ class Admin extends Usuario {
 
         return { status: true, user: admin };
     }
+
 }
 
 module.exports = Admin;

@@ -1,140 +1,74 @@
 // src/controllers/professorController.js
-const knex = require('../database/connection');
-const bcrypt = require('bcryptjs');
-const INSTRUMENTOS = require('../constants').INSTRUMENTOS;
+const Professor = require('../models/Professor');
 
 class ProfessorController {
-    // Método para criar professor
     async create(req, res) {
-        const { nome, email, password, areaAtuacao } = req.body;
+        const { nome, email, phoneNumber, password, areaAtuacao } = req.body;
+        const professor = new Professor(nome, email, phoneNumber, password, areaAtuacao);
 
-        // Validação da área de atuação
-        if (!INSTRUMENTOS.includes(areaAtuacao)) {
-            return res.status(400).json({ message: `Área de atuação inválida. Opções disponíveis: ${INSTRUMENTOS.join(', ')}` });
-        }
+        const result = await professor.createProfessor();
 
-        try {
-            // Verifique se o email já está registrado
-            const existingUser = await knex('usuarios').where({ email }).first();
-            if (existingUser) {
-                return res.status(400).json({ message: 'Email já está registrado.' });
-            }
-
-            // Crie o usuário na tabela 'usuarios'
-            const hashedPassword = bcrypt.hashSync(password, 10);
-            const [userId] = await knex('usuarios').insert({
-                nome,
-                email,
-                phoneNumber: '', // ou outro campo se aplicável
-                password: hashedPassword,
-                role: 'professor',
-            }).returning('id');
-
-            // Crie o professor na tabela 'professores'
-            await knex('professores').insert({
-                areaAtuacao,
-                email: email,
-                // outros campos se necessário
-            });
-
+        if (result.status) {
             return res.status(201).json({ message: 'Professor criado com sucesso.' });
-        } catch (error) {
-            console.error('Erro ao criar professor:', error);
-            return res.status(500).json({ message: 'Erro interno ao criar professor.' });
+        } else {
+            return res.status(400).json({ message: result.message || 'Erro ao criar professor.', error: result.err });
         }
     }
 
-    // Método para atualizar professor
-    async updateProfessor(req, res) {
-        const { id } = req.params;
-        const { nome, email, phoneNumber, areaAtuacao, password } = req.body;
-
-        // Validação da área de atuação
-        if (areaAtuacao && !INSTRUMENTOS.includes(areaAtuacao)) {
-            return res.status(400).json({ message: `Área de atuação inválida. Opções disponíveis: ${INSTRUMENTOS.join(', ')}` });
-        }
-
-        try {
-            const professor = await knex('professores').where({ id }).first();
-            if (!professor) {
-                return res.status(404).json({ message: 'Professor não encontrado.' });
-            }
-
-            // Atualize na tabela 'usuarios'
-            const updateData = {};
-            if (nome) updateData.nome = nome;
-            if (email) updateData.email = email;
-            if (phoneNumber) updateData.phoneNumber = phoneNumber;
-            if (password) {
-                const salt = bcrypt.genSaltSync(10);
-                const hashedPassword = bcrypt.hashSync(password, salt);
-                updateData.password = hashedPassword;
-            }
-
-            await knex('usuarios').where({ email: professor.email }).update(updateData);
-
-            // Atualize na tabela 'professores'
-            await knex('professores').where({ id }).update({
-                areaAtuacao: areaAtuacao || professor.areaAtuacao,
-                email: email || professor.email,
-                // outros campos se necessário
-            });
-
-            return res.status(200).json({ message: 'Professor atualizado com sucesso.' });
-        } catch (error) {
-            console.error('Erro ao atualizar professor:', error);
-            return res.status(500).json({ message: 'Erro interno ao atualizar professor.' });
-        }
-    }
-
-    // Método para obter todos os professores
     async getAllProfessores(req, res) {
         try {
-            const professores = await knex('professores');
+            const professores = await Professor.getAllProfessores();
             return res.status(200).json(professores);
         } catch (error) {
-            console.error('Erro ao obter professores:', error);
-            return res.status(500).json({ message: 'Erro interno ao obter professores.' });
+            console.error('Erro ao buscar professores:', error);
+            return res.status(500).json({ message: 'Erro ao buscar professores.' });
         }
     }
 
-    // Método para obter professor por ID
     async getProfessorById(req, res) {
         const { id } = req.params;
-
         try {
-            const professor = await knex('professores').where({ id }).first();
-            if (!professor) {
+            const professor = await Professor.getProfessorById(id);
+            if (professor) {
+                return res.status(200).json(professor);
+            } else {
                 return res.status(404).json({ message: 'Professor não encontrado.' });
             }
-
-            return res.status(200).json(professor);
         } catch (error) {
-            console.error('Erro ao obter professor por ID:', error);
-            return res.status(500).json({ message: 'Erro interno ao obter professor.' });
+            console.error('Erro ao buscar professor:', error);
+            return res.status(500).json({ message: 'Erro ao buscar professor.' });
         }
     }
 
-    // Método para deletar professor
-    async deleteProfessor(req, res) {
+    async updateProfessor(req, res) {
         const { id } = req.params;
+        const { nome, email, phoneNumber, password, areaAtuacao } = req.body;
 
         try {
-            const professor = await knex('professores').where({ id }).first();
-            if (!professor) {
-                return res.status(404).json({ message: 'Professor não encontrado.' });
+            const result = await Professor.updateProfessor(id, { nome, email, phoneNumber, password, areaAtuacao });
+            if (result.status) {
+                return res.status(200).json({ message: 'Professor atualizado com sucesso.' });
+            } else {
+                return res.status(400).json({ message: result.message || 'Erro ao atualizar professor.', error: result.err });
             }
+        } catch (error) {
+            console.error('Erro ao atualizar professor:', error);
+            return res.status(500).json({ message: 'Erro ao atualizar professor.' });
+        }
+    }
 
-            // Deletar o professor
-            await knex('professores').where({ id }).del();
-
-            // Deletar o usuário correspondente
-            await knex('usuarios').where({ email: professor.email }).del();
-
-            return res.status(200).json({ message: 'Professor deletado com sucesso.' });
+    async deleteProfessor(req, res) {
+        const { id } = req.params;
+        try {
+            const result = await Professor.deleteProfessor(id);
+            if (result.status) {
+                return res.status(200).json({ message: 'Professor deletado com sucesso.' });
+            } else {
+                return res.status(400).json({ message: result.message || 'Erro ao deletar professor.', error: result.err });
+            }
         } catch (error) {
             console.error('Erro ao deletar professor:', error);
-            return res.status(500).json({ message: 'Erro interno ao deletar professor.' });
+            return res.status(500).json({ message: 'Erro ao deletar professor.' });
         }
     }
 }

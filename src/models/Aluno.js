@@ -3,12 +3,11 @@ const Usuario = require('./Usuario');
 const knex = require('../database/connection');
 
 class Aluno extends Usuario {
-    constructor(nome, email, phoneNumber, instrumento, matricula, dataNascimento, professor_id = null) {
+    constructor(nome, email, phoneNumber, instrumento, matricula, dataNascimento) {
         super(nome, email, phoneNumber, undefined, 'aluno'); 
         this.instrumento = instrumento;
         this.matricula = matricula;
         this.dataNascimento = dataNascimento;
-        this.professor_id = professor_id; // Relacionamento com o professor
     }
 
     async createAluno() {
@@ -29,7 +28,6 @@ class Aluno extends Usuario {
                 instrumento: this.instrumento,
                 matricula: this.matricula,
                 dataNascimento: this.dataNascimento,
-                professor_id: this.professor_id, // Atribui o professor
             });
 
             console.log(`Aluno ${this.email} criado com sucesso na tabela 'alunos'.`);
@@ -55,8 +53,7 @@ class Aluno extends Usuario {
                     phoneNumber: usuario.phoneNumber,
                     instrumento: aluno.instrumento,
                     matricula: aluno.matricula,
-                    dataNascimento: aluno.dataNascimento,
-                    professor_id: aluno.professor_id
+                    dataNascimento: aluno.dataNascimento
                 };
             });
         } catch (err) {
@@ -78,54 +75,7 @@ class Aluno extends Usuario {
                     phoneNumber: usuario.phoneNumber,
                     instrumento: aluno.instrumento,
                     matricula: aluno.matricula,
-                    dataNascimento: aluno.dataNascimento,
-                    professor_id: aluno.professor_id
-                };
-            });
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    static async getAlunosByProfessorId(professor_id) {
-        try {
-            const alunos = await knex('alunos').where({ professor_id }).select('*');
-            const usuarios = await knex('usuarios').whereIn('email', alunos.map(a => a.email)).select('*');
-
-            return alunos.map(aluno => {
-                const usuario = usuarios.find(u => u.email === aluno.email);
-                return {
-                    id: aluno.id,
-                    nome: usuario.nome,
-                    email: usuario.email,
-                    phoneNumber: usuario.phoneNumber,
-                    instrumento: aluno.instrumento,
-                    matricula: aluno.matricula,
-                    dataNascimento: aluno.dataNascimento,
-                    professor_id: aluno.professor_id
-                };
-            });
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    static async getAlunosByInstrumentoAndProfessor(instrumento, professor_id) {
-        try {
-            const alunos = await knex('alunos').where({ instrumento, professor_id }).select('*');
-            const usuarios = await knex('usuarios').whereIn('email', alunos.map(a => a.email)).select('*');
-
-            return alunos.map(aluno => {
-                const usuario = usuarios.find(u => u.email === aluno.email);
-                return {
-                    id: aluno.id,
-                    nome: usuario.nome,
-                    email: usuario.email,
-                    phoneNumber: usuario.phoneNumber,
-                    instrumento: aluno.instrumento,
-                    matricula: aluno.matricula,
-                    dataNascimento: aluno.dataNascimento,
-                    professor_id: aluno.professor_id
+                    dataNascimento: aluno.dataNascimento
                 };
             });
         } catch (err) {
@@ -146,8 +96,7 @@ class Aluno extends Usuario {
                 phoneNumber: usuario.phoneNumber,
                 instrumento: aluno.instrumento,
                 matricula: aluno.matricula,
-                dataNascimento: aluno.dataNascimento,
-                professor_id: aluno.professor_id
+                dataNascimento: aluno.dataNascimento
             };
         } catch (err) {
             throw err;
@@ -164,7 +113,6 @@ class Aluno extends Usuario {
                 role: 'aluno'
             });
 
-            // Atualizar na tabela 'alunos'
             await knex('alunos').where({ id }).update({
                 instrumento: dados.instrumento,
                 matricula: dados.matricula,

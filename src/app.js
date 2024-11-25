@@ -1,32 +1,17 @@
-// src/server.js
+// src/app.js
 require('dotenv').config();
+
 const express = require('express');
+const router = require('./routers/routers');
 const cors = require('cors');
-const routers = require('./routers/routers'); // Ajuste o caminho conforme sua estrutura
+
 const app = express();
 
-// Configuração de CORS
-const allowedOrigins = ['https://front-end-projeto-bf.vercel.app'];
+app.use(cors())
 
-app.use(cors({
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-// Middleware para parsear JSON
 app.use(express.json());
+app.use(router);
 
-// Usar os roteadores
-app.use('/', routers);
-
-// Rota de teste (Opcional)
-app.get('/', (req, res) => {
-    res.send('Servidor está funcionando!');
-});
-
-// Iniciar o servidor
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+app.listen(8080, '0.0.0.0', () => {
+  console.log('API rodando na portaaa 8080');
 });
