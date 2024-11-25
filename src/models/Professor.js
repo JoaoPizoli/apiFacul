@@ -23,6 +23,7 @@ class Professor extends Usuario {
             return { status: false, err: err.message };
         }
     }
+
     static async getAllProfessores() {
         try {
             const professores = await knex('professores').select('*');
@@ -110,6 +111,11 @@ class Professor extends Usuario {
             console.error(`Erro ao deletar professor: ${err.message}`);
             return { status: false, err: err.message };
         }
+    }
+
+    // **Método Herdado para Encontrar Usuário por Email**
+    async findUserByEmail(email) {
+        return super.findUserByEmail(email);
     }
 }
 
