@@ -9,7 +9,13 @@ class AlunoController {
         // Log dos dados recebidos
         console.log(`Dados recebidos: nome=${nome}, email=${email}, phoneNumber=${phoneNumber}, instrumento=${instrumento}, matricula=${matricula}, dataNascimento=${dataNascimento}`);
 
-        const aluno = new Aluno(nome, email, phoneNumber, instrumento, matricula, dataNascimento);
+        // Determine o professor que está criando o aluno
+        let professorId = null;
+        if (req.user.role === 'professor') {
+            professorId = req.user.id; // Assume que o ID do professor está no token
+        }
+
+        const aluno = new Aluno(nome, email, phoneNumber, instrumento, matricula, dataNascimento, professorId);
 
         const result = await aluno.createAluno();
 
@@ -24,7 +30,13 @@ class AlunoController {
 
     async getAllAlunos(req, res) {
         try {
-            const alunos = await Aluno.getAllAlunos();
+            let alunos;
+            if (req.user.role === 'admin') {
+                alunos = await Aluno.getAllAlunos();
+            } else if (req.user.role === 'professor') {
+                alunos = await Aluno.getAlunosByProfessorId(req.user.id);
+            }
+
             return res.status(200).json(alunos);
         } catch (error) {
             console.error('Erro ao buscar alunos:', error);
@@ -35,7 +47,13 @@ class AlunoController {
     async getAlunosByInstrumento(req, res) {
         const { instrumento } = req.params;
         try {
-            const alunos = await Aluno.getAlunosByInstrumento(instrumento);
+            let alunos;
+            if (req.user.role === 'admin') {
+                alunos = await Aluno.getAlunosByInstrumento(instrumento);
+            } else if (req.user.role === 'professor') {
+                alunos = await Aluno.getAlunosByInstrumentoAndProfessor(instrumento, req.user.id);
+            }
+
             return res.status(200).json(alunos);
         } catch (error) {
             console.error('Erro ao buscar alunos por instrumento:', error);
@@ -48,7 +66,11 @@ class AlunoController {
         try {
             const aluno = await Aluno.getAlunoById(id);
             if (aluno) {
-                return res.status(200).json(aluno);
+                if (req.user.role === 'admin' || (req.user.role === 'professor' && aluno.professor_id === req.user.id)) {
+                    return res.status(200).json(aluno);
+                } else {
+                    return res.status(403).json({ message: 'Acesso negado.' });
+                }
             } else {
                 return res.status(404).json({ message: 'Aluno não encontrado.' });
             }
@@ -63,11 +85,20 @@ class AlunoController {
         const { nome, email, phoneNumber, instrumento, matricula, dataNascimento } = req.body;
 
         try {
-            const result = await Aluno.updateAluno(id, { nome, email, phoneNumber, instrumento, matricula, dataNascimento });
-            if (result.status) {
-                return res.status(200).json({ message: 'Aluno atualizado com sucesso.' });
+            const aluno = await Aluno.getAlunoById(id);
+            if (!aluno) {
+                return res.status(404).json({ message: 'Aluno não encontrado.' });
+            }
+
+            if (req.user.role === 'admin' || (req.user.role === 'professor' && aluno.professor_id === req.user.id)) {
+                const result = await Aluno.updateAluno(id, { nome, email, phoneNumber, instrumento, matricula, dataNascimento });
+                if (result.status) {
+                    return res.status(200).json({ message: 'Aluno atualizado com sucesso.' });
+                } else {
+                    return res.status(400).json({ message: result.message || 'Erro ao atualizar aluno.', error: result.err });
+                }
             } else {
-                return res.status(400).json({ message: result.message || 'Erro ao atualizar aluno.', error: result.err });
+                return res.status(403).json({ message: 'Acesso negado.' });
             }
         } catch (error) {
             console.error('Erro ao atualizar aluno:', error);
@@ -78,11 +109,20 @@ class AlunoController {
     async deleteAluno(req, res) {
         const { id } = req.params;
         try {
-            const result = await Aluno.deleteAluno(id);
-            if (result.status) {
-                return res.status(200).json({ message: 'Aluno deletado com sucesso.' });
+            const aluno = await Aluno.getAlunoById(id);
+            if (!aluno) {
+                return res.status(404).json({ message: 'Aluno não encontrado.' });
+            }
+
+            if (req.user.role === 'admin' || (req.user.role === 'professor' && aluno.professor_id === req.user.id)) {
+                const result = await Aluno.deleteAluno(id);
+                if (result.status) {
+                    return res.status(200).json({ message: 'Aluno deletado com sucesso.' });
+                } else {
+                    return res.status(400).json({ message: result.message || 'Erro ao deletar aluno.', error: result.err });
+                }
             } else {
-                return res.status(400).json({ message: result.message || 'Erro ao deletar aluno.', error: result.err });
+                return res.status(403).json({ message: 'Acesso negado.' });
             }
         } catch (error) {
             console.error('Erro ao deletar aluno:', error);

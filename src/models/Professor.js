@@ -23,6 +23,26 @@ class Professor extends Usuario {
             return { status: false, err: err.message };
         }
     }
+
+    async login(email, password) {
+        const userResult = await this.findUserByEmail(email);
+    
+        if (!userResult.status) return userResult;
+        const professor = userResult.user;
+        if (professor.role !== 'professor') {
+            return { status: false, message: 'Acesso negado. Não é professor.' };
+        }
+
+        const isMatch = bcrypt.compareSync(password, professor.password);
+        console.log(`Senha corresponde: ${isMatch}`);
+
+        if (!isMatch) {
+            return { status: false, message: 'Senha incorreta' };
+        }
+
+        return { status: true, user: professor };
+    }
+
     static async getAllProfessores() {
         try {
             const professores = await knex('professores').select('*');

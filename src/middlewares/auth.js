@@ -1,15 +1,12 @@
-// src/middlewares/authAdmin.js
+// src/middlewares/auth.js
 const jwt = require('jsonwebtoken');
 
-function authAdmin(req, res, next) {
+function auth(req, res, next) {
     const token = req.header('Authorization');
     if (!token) return res.status(401).json({ message: 'Acesso negado. Token não fornecido.' });
 
     try {
         const decoded = jwt.verify(token.replace('Bearer ', ''), 'secret_key');
-        if (decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'Acesso negado. Permissão insuficiente.' });
-        }
         req.user = decoded;
         next();
     } catch (err) {
@@ -17,4 +14,4 @@ function authAdmin(req, res, next) {
     }
 }
 
-module.exports = authAdmin;
+module.exports = auth;

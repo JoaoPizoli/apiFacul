@@ -1,6 +1,7 @@
 // src/controllers/authController.js
 require('dotenv').config();
 const Admin = require('../models/Admin');
+const Professor = require('../models/Professor');
 const twilio = require('twilio');
 const jwt = require('jsonwebtoken');
 const knex = require('../database/connection');
@@ -8,9 +9,10 @@ const knex = require('../database/connection');
 const client = twilio('AC26cf7ef55783bfe552f453e751ec6a5c', '84e9788fe1987ec62f1ae97178ffe7e8');
 
 class AuthController {
-    async create(req, res) {
+    // Login para Administradores
+    async adminLogin(req, res) {
         const { email, password } = req.body;
-        const admin = new Admin(); 
+        const admin = new Admin();
 
         const result = await admin.login(email, password);
         if (result.status) {
@@ -41,6 +43,7 @@ class AuthController {
         }
     }
 
+    // Verificação do Código para Administradores
     async verifyCode(req, res) {
         const { email, code } = req.body;
 
@@ -64,6 +67,24 @@ class AuthController {
         await knex('verification_codes').where({ id: record.id }).del();
 
         return res.status(200).json({ token });
+    }
+
+    // Login para Professores
+    async professorLogin(req, res) {
+        const { email, password } = req.body;
+        const professor = new Professor();
+
+        const result = await professor.login(email, password);
+        if (result.status) {
+            const user = result.user;
+
+            // Geração direta do token JWT para professores
+            const token = jwt.sign({ id: user.id, role: user.role }, 'secret_key', { expiresIn: '1h' });
+
+            return res.status(200).json({ message: 'Login bem-sucedido.', token });
+        } else {
+            return res.status(401).json({ message: result.message || 'Erro ao fazer login.' });
+        }
     }
 }
 

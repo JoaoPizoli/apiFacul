@@ -71,8 +71,6 @@ class Usuario {
             return { status: false, err: err.message };
         }
     }
-
-
 }
 
 module.exports = Usuario;
