@@ -1,89 +1,104 @@
 // src/controllers/authController.js
-require('dotenv').config();
-const Admin = require('../models/Admin');
-const Professor = require('../models/Professor');
-const twilio = require('twilio');
-const jwt = require('jsonwebtoken');
 const knex = require('../database/connection');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { INSTRUMENTOS } = require('../constants');
+const twilio = require('twilio');
 
-const client = twilio('AC26cf7ef55783bfe552f453e751ec6a5c', 'efe4b9b3c0c68962716ddfd630d48b3d');
+// Configurações do Twilio
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const client = twilio(accountSid, authToken);
+
+// Chave secreta para JWT
+const secretKey = process.env.SECRET_KEY;
 
 class AuthController {
-    // Login para Administradores
+    // Login de administrador
     async adminLogin(req, res) {
         const { email, password } = req.body;
-        const admin = new Admin();
 
-        const result = await admin.login(email, password);
-        if (result.status) {
-            const user = result.user;
+        try {
+            const user = await knex('usuarios').where({ email, role: 'admin' }).first();
+            if (!user) {
+                return res.status(400).json({ message: 'Credenciais inválidas.' });
+            }
 
-            const verificationCode = Math.floor(1000 + Math.random() * 9000);
+            const isMatch = bcrypt.compareSync(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Credenciais inválidas.' });
+            }
 
-            await knex('verification_codes').insert({
-                user_id: user.id,
-                code: verificationCode,
-                expires_at: new Date(Date.now() + 10 * 60000), 
+            // Enviar código de verificação via SMS
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
+
+            // Salvar o código de verificação no banco de dados ou em cache
+            // Aqui está uma abordagem simplificada usando um campo temporário
+            await knex('usuarios').where({ id: user.id }).update({ verification_code: verificationCode });
+
+            await client.messages.create({
+                body: `Seu código de verificação é: ${verificationCode}`,
+                from: twilioPhoneNumber,
+                to: user.phoneNumber
             });
 
-            try {
-                await client.messages.create({
-                    body: `Seu código de verificação é: ${verificationCode}`,
-                    from: process.env.TWILIO_PHONE_NUMBER,
-                    to: user.phoneNumber,
-                });
-
-                return res.status(200).json({ message: 'Código de verificação enviado.' });
-            } catch (error) {
-                console.error('Erro ao enviar SMS:', error);
-                return res.status(500).json({ message: 'Erro ao enviar o código de verificação.' });
-            }
-        } else {
-            return res.status(401).json({ message: result.message });
+            return res.status(200).json({ message: 'Código de verificação enviado via SMS.' });
+        } catch (error) {
+            console.error('Erro no login do administrador:', error);
+            return res.status(500).json({ message: 'Erro interno no servidor.' });
         }
     }
 
-    // Verificação do Código para Administradores
+    // Verificar código de administrador
     async verifyCode(req, res) {
         const { email, code } = req.body;
 
-        // Obtenha o usuário
-        const userResult = await knex('usuarios').where({ email }).first();
-        if (!userResult) {
-            return res.status(400).json({ message: 'Usuário não encontrado.' });
+        try {
+            const user = await knex('usuarios').where({ email, role: 'admin' }).first();
+            if (!user) {
+                return res.status(400).json({ message: 'Usuário não encontrado.' });
+            }
+
+            if (user.verification_code !== code) {
+                return res.status(400).json({ message: 'Código de verificação inválido.' });
+            }
+
+            // Remover o código de verificação após a verificação
+            await knex('usuarios').where({ id: user.id }).update({ verification_code: null });
+
+            // Gerar token JWT
+            const token = jwt.sign({ id: user.id, role: user.role }, secretKey, { expiresIn: '1h' });
+
+            return res.status(200).json({ token, message: 'Login bem-sucedido.' });
+        } catch (error) {
+            console.error('Erro ao verificar código:', error);
+            return res.status(500).json({ message: 'Erro interno no servidor.' });
         }
-
-        const record = await knex('verification_codes')
-            .where({ user_id: userResult.id, code })
-            .andWhere('expires_at', '>', new Date())
-            .first();
-
-        if (!record) {
-            return res.status(400).json({ message: 'Código de verificação inválido ou expirado.' });
-        }
-
-        const token = jwt.sign({ id: userResult.id, role: userResult.role }, 'secret_key', { expiresIn: '1h' });
-
-        await knex('verification_codes').where({ id: record.id }).del();
-
-        return res.status(200).json({ token });
     }
 
-    // Login para Professores
+    // Login de professor
     async professorLogin(req, res) {
         const { email, password } = req.body;
-        const professor = new Professor();
 
-        const result = await professor.login(email, password);
-        if (result.status) {
-            const user = result.user;
+        try {
+            const user = await knex('usuarios').where({ email, role: 'professor' }).first();
+            if (!user) {
+                return res.status(400).json({ message: 'Credenciais inválidas.' });
+            }
 
-            // Geração direta do token JWT para professores
-            const token = jwt.sign({ id: user.id, role: user.role }, 'secret_key', { expiresIn: '1h' });
+            const isMatch = bcrypt.compareSync(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: 'Credenciais inválidas.' });
+            }
 
-            return res.status(200).json({ message: 'Login bem-sucedido.', token });
-        } else {
-            return res.status(401).json({ message: result.message || 'Erro ao fazer login.' });
+            // Gerar token JWT
+            const token = jwt.sign({ id: user.id, role: user.role }, secretKey, { expiresIn: '1h' });
+
+            return res.status(200).json({ token, message: 'Login bem-sucedido.' });
+        } catch (error) {
+            console.error('Erro no login do professor:', error);
+            return res.status(500).json({ message: 'Erro interno no servidor.' });
         }
     }
 }

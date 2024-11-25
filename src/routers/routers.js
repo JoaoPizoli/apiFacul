@@ -3,7 +3,7 @@ const express = require('express');
 const AuthController = require('../controllers/authController');
 const AlunoController = require('../controllers/alunoController');
 const ProfessorController = require('../controllers/professorController');
-const UsuarioController = require('../controllers/usuarioController'); // Verifique se este controlador existe
+const UsuarioController = require('../controllers/usuarioController');
 const authAdmin = require('../middlewares/authAdmin');
 const authProfessor = require('../middlewares/authProfessor');
 const auth = require('../middlewares/auth'); // Middleware geral
@@ -15,9 +15,9 @@ router.post('/admin/login', AuthController.adminLogin);
 router.post('/admin/verify-code', AuthController.verifyCode);
 router.post('/professor/login', AuthController.professorLogin);
 
-// Rota para obter informações do usuário atual
+// Rotas para informações do usuário atual
 router.get('/usuarios/me', auth, UsuarioController.getMe);
-router.put('/usuarios/me', auth, UsuarioController.updateMe); // Linha 20
+router.put('/usuarios/me', auth, UsuarioController.updateMe);
 
 // Rotas de Alunos
 router.post('/alunos', auth, AlunoController.create);

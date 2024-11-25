@@ -3,6 +3,7 @@ const knex = require('../database/connection');
 const bcrypt = require('bcryptjs');
 
 class UsuarioController {
+    // Método para obter informações do usuário atual
     async getMe(req, res) {
         try {
             const user = await knex('usuarios').where({ id: req.user.id }).first();
@@ -23,10 +24,11 @@ class UsuarioController {
         }
     }
 
+    // Método para atualizar informações do usuário atual
     async updateMe(req, res) {
         const { nome, email, phoneNumber, password } = req.body;
         try {
-            // Atualizar informações básicas
+            // Preparar os dados para atualização
             const updateData = {};
             if (nome) updateData.nome = nome;
             if (email) updateData.email = email;
@@ -37,6 +39,7 @@ class UsuarioController {
                 updateData.password = hashedPassword;
             }
 
+            // Atualizar na tabela 'usuarios'
             await knex('usuarios').where({ id: req.user.id }).update(updateData);
 
             return res.status(200).json({ message: 'Informações atualizadas com sucesso.' });
