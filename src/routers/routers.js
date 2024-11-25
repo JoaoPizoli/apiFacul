@@ -3,7 +3,7 @@ const express = require('express');
 const AuthController = require('../controllers/authController');
 const AlunoController = require('../controllers/alunoController');
 const ProfessorController = require('../controllers/professorController');
-const UsuarioController = require('../controllers/usuarioController'); // Novo controlador
+const UsuarioController = require('../controllers/usuarioController'); // Verifique se este controlador existe
 const authAdmin = require('../middlewares/authAdmin');
 const authProfessor = require('../middlewares/authProfessor');
 const auth = require('../middlewares/auth'); // Middleware geral
@@ -17,10 +17,9 @@ router.post('/professor/login', AuthController.professorLogin);
 
 // Rota para obter informações do usuário atual
 router.get('/usuarios/me', auth, UsuarioController.getMe);
-router.put('/usuarios/me', auth, UsuarioController.updateMe); // Rota para atualizar informações
+router.put('/usuarios/me', auth, UsuarioController.updateMe); // Linha 20
 
 // Rotas de Alunos
-// Protegido por auth (admin e professor)
 router.post('/alunos', auth, AlunoController.create);
 router.get('/alunos', auth, AlunoController.getAllAlunos);
 router.get('/alunos/instrumento/:instrumento', auth, AlunoController.getAlunosByInstrumento);
