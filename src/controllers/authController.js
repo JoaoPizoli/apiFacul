@@ -2,7 +2,6 @@
 const knex = require('../database/connection');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { INSTRUMENTOS } = require('../constants');
 const twilio = require('twilio');
 
 // Configurações do Twilio
@@ -13,6 +12,9 @@ const client = twilio(accountSid, authToken);
 
 // Chave secreta para JWT
 const secretKey = process.env.SECRET_KEY;
+
+// Tempo de validade do código de verificação (em minutos)
+const CODE_VALIDITY_MINUTES = 10;
 
 class AuthController {
     // Login de administrador
@@ -30,13 +32,20 @@ class AuthController {
                 return res.status(400).json({ message: 'Credenciais inválidas.' });
             }
 
-            // Enviar código de verificação via SMS
-            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // Código de 6 dígitos
+            // Gerar código de verificação de 6 dígitos
+            const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-            // Salvar o código de verificação no banco de dados ou em cache
-            // Aqui está uma abordagem simplificada usando um campo temporário
-            await knex('usuarios').where({ id: user.id }).update({ verification_code: verificationCode });
+            // Calcular o horário de expiração do código
+            const expiresAt = new Date(Date.now() + CODE_VALIDITY_MINUTES * 60000); // 10 minutos à frente
 
+            // Salvar o código de verificação na tabela 'verification_codes'
+            await knex('verification_codes').insert({
+                user_id: user.id,
+                code: verificationCode,
+                expires_at: expiresAt
+            });
+
+            // Enviar o código via SMS usando Twilio
             await client.messages.create({
                 body: `Seu código de verificação é: ${verificationCode}`,
                 from: twilioPhoneNumber,
@@ -60,12 +69,26 @@ class AuthController {
                 return res.status(400).json({ message: 'Usuário não encontrado.' });
             }
 
-            if (user.verification_code !== code) {
+            // Buscar o código de verificação na tabela 'verification_codes'
+            const verificationEntry = await knex('verification_codes')
+                .where({ user_id: user.id, code })
+                .first();
+
+            if (!verificationEntry) {
                 return res.status(400).json({ message: 'Código de verificação inválido.' });
             }
 
+            // Verificar se o código não expirou
+            const agora = new Date();
+            const expiresAt = new Date(verificationEntry.expires_at);
+            if (agora > expiresAt) {
+                // Remover o código expirado
+                await knex('verification_codes').where({ id: verificationEntry.id }).del();
+                return res.status(400).json({ message: 'Código de verificação expirado.' });
+            }
+
             // Remover o código de verificação após a verificação
-            await knex('usuarios').where({ id: user.id }).update({ verification_code: null });
+            await knex('verification_codes').where({ id: verificationEntry.id }).del();
 
             // Gerar token JWT
             const token = jwt.sign({ id: user.id, role: user.role }, secretKey, { expiresIn: '1h' });
