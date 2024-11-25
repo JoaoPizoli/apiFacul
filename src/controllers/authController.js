@@ -6,7 +6,7 @@ const twilio = require('twilio');
 const jwt = require('jsonwebtoken');
 const knex = require('../database/connection');
 
-const client = twilio('AC26cf7ef55783bfe552f453e751ec6a5c', '84e9788fe1987ec62f1ae97178ffe7e8');
+const client = twilio('AC26cf7ef55783bfe552f453e751ec6a5c', 'efe4b9b3c0c68962716ddfd630d48b3d');
 
 class AuthController {
     // Login para Administradores
