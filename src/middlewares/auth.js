@@ -1,6 +1,6 @@
 // src/middlewares/auth.js
 const jwt = require('jsonwebtoken');
-const secretKey = process.env.SECRET_KEY;
+const secretKey = 'secret_key'; // Substituído de process.env.SECRET_KEY para 'secret_key'
 
 module.exports = function(req, res, next) {
     const token = req.headers['authorization']?.split(' ')[1];

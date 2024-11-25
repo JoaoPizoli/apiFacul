@@ -28,5 +28,10 @@ router.get('/professores/:id', authMiddleware, ProfessorController.getProfessorB
 router.put('/professores/:id', authMiddleware, ProfessorController.updateProfessor);
 router.delete('/professores/:id', authMiddleware, ProfessorController.deleteProfessor);
 
+// Rotas de Usuário
+const UsuarioController = require('../controllers/usuarioController');
+router.get('/usuarios/me', authMiddleware, UsuarioController.getMe);
+router.put('/usuarios/me', authMiddleware, UsuarioController.updateMe);
+
 // Exporta as rotas
 module.exports = router;

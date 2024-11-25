@@ -1,5 +1,4 @@
 // src/controllers/authController.js
-require('dotenv').config();
 const Admin = require('../models/Admin');
 const Professor = require('../models/Professor'); // Importar o modelo Professor
 const twilio = require('twilio');
@@ -83,6 +82,11 @@ class AuthController {
         const isMatch = bcrypt.compareSync(password, userResult.user.password);
         if (!isMatch) {
             return res.status(401).json({ message: 'Senha incorreta.' });
+        }
+
+        // Verificar se o usuário é realmente um professor
+        if (userResult.user.role !== 'professor') {
+            return res.status(403).json({ message: 'Acesso negado. Não é professor.' });
         }
 
         // Gerar token JWT
